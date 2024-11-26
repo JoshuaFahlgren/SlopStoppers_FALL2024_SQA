@@ -14,6 +14,13 @@ import py_parser
 import numpy as np 
 
 
+from .. import log
+
+logger = log.getLogger()
+FILE_NAME = "main"
+
+
+
 def giveTimeStamp():
   tsObj = time.time()
   strToret = datetime.datetime.fromtimestamp(tsObj).strftime(constants.TIME_FORMAT) 
@@ -133,18 +140,24 @@ def getCSVData(dic_, dir_repo):
   				  model_label_count, model_output_count, data_pipeline_count, environment_count, state_observe_count, total_event_count )
 
 		temp_list.append( the_tup )
+
+		logger.info(f"{FILE_NAME} | getCSVData: Processed {TEST_ML_SCRIPT}, "
+                    f"data_load_count={data_load_count}, model_load_count={model_load_count}, "
+                    f"total_event_count={total_event_count}")
 		# print('='*25)
 	return temp_list
   
   
 def getAllPythonFilesinRepo(path2dir):
 	valid_list = []
+	logger.info(f"{FILE_NAME} | getAllPythonFilesinRepo: Scanning directory {path2dir} for Python files.")
 	for root_, dirnames, filenames in os.walk(path2dir):
 		for file_ in filenames:
 			full_path_file = os.path.join(root_, file_) 
 			if( os.path.exists( full_path_file ) ):
 				if (file_.endswith( constants.PY_FILE_EXTENSION ) and (py_parser.checkIfParsablePython( full_path_file ) )   ):
-					valid_list.append(full_path_file) 
+					valid_list.append(full_path_file)
+					logger.info(f"{FILE_NAME} | getAllPythonFilesinRepo: Found valid Python file {full_path_file}")
 	valid_list = np.unique(  valid_list )
 	return valid_list
 
@@ -163,7 +176,8 @@ def runFameML(inp_dir, csv_fil):
 		print('-'*50)
 	full_df = pd.DataFrame( df_list ) 
 	# print(full_df.head())
-	full_df.to_csv(csv_fil, header= constants.CSV_HEADER, index=False, encoding= constants.UTF_ENCODING)     
+	full_df.to_csv(csv_fil, header= constants.CSV_HEADER, index=False, encoding= constants.UTF_ENCODING)
+	logger.info(f"{FILE_NAME} | runFameML: Written output CSV to {csv_fil}. Total records: {len(full_df)}")
 	return output_event_dict
 
 
