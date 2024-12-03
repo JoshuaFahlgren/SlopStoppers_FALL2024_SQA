@@ -1,120 +1,134 @@
-'''
-Team Name: Slop Stoppers
-
-Team Members:
-- Joshua Fahlgren
-- Mathew Rogers
-
-'''
-
 import random
 import math
+import sys
+import os
+from typing import List
 
-def add(v1, v2):
-    if v1.isnumeric() and v2.isnumeric():
-        v1 = float(v1)
-        v2 = float(v2)
-        return v1 + v2
-    else:
-        return "One of the inputs is invalid."
+sys.path.append(os.path.join(os.path.dirname(__file__), "MLForensics", "FAME-ML"))
 
-def subtract(v1, v2):
-    if v1.isnumeric() and v2.isnumeric():
-        v1 = float(v1)
-        v2 = float(v2)
-        return v1 - v2
-    else:
-        return "One of the inputs is invalid."
+import constants
+import py_parser
+import numpy as np
+import statistics
 
-def multiply(v1, v2):
-    if v1.isnumeric() and v2.isnumeric():
-        v1 = float(v1)
-        v2 = float(v2)
-        return v1 * v2
-    else:
-        return "One of the inputs is invalid."
 
-def divide(v1, v2):
-    if v1.isnumeric() and v2.isnumeric():
-        v1 = float(v1)
-        v2 = float(v2)
-        if v2 != 0:
-            return v1 / v2
-        else:
-            return "Division by zero error."
-    else:
-        return "One of the inputs is invalid."
+# mining/git.repo.miner.py
+def makeChunks(the_list, size_):
+    for i in range(0, len(the_list), size_):
+        yield the_list[i : i + size_]
 
-def power(v1, v2):
-    if v1.isnumeric() and v2.isnumeric():
-        v1 = float(v1)
-        v2 = float(v2)
+
+# mining/mining.py
+def dumpContentIntoFile(strP, fileP):
+    fileToWrite = open(fileP, "w")
+    fileToWrite.write(strP)
+    fileToWrite.close()
+    return str(os.stat(fileP).st_size)
+
+
+# FAME-ML/main.py
+def getAllPythonFilesinRepo(path2dir):
+    valid_list = []
+    for root_, dirnames, filenames in os.walk(path2dir):
+        for file_ in filenames:
+            full_path_file = os.path.join(root_, file_)
+            if os.path.exists(full_path_file):
+                if file_.endswith(constants.PY_FILE_EXTENSION) and (
+                    py_parser.checkIfParsablePython(full_path_file)
+                ):
+                    valid_list.append(full_path_file)
+    valid_list = np.unique(valid_list)
+    return valid_list
+
+
+# empirical/report.py
+def Average(Mylist):
+    return sum(Mylist) / len(Mylist)
+
+
+# empirical/report.py
+def Median(Mylist):
+    return statistics.median(Mylist)
+
+
+def fuzzer():
+    failure_count = 0
+
+    for _ in range(100):
         try:
-            return math.pow(v1, v2)
-        except OverflowError:
-            return "Result too large to compute."
-    else:
-        return "One of the inputs is invalid."
+            test_list = random.choices(range(100), k=random.randint(0, 100))
+            if random.choice([True, False]):
+                test_list = []
+            chunk_size = random.choice([1, 0, -1, 100, random.randint(1, 50)])
+            list(makeChunks(test_list, chunk_size))
+        except Exception as e:
+            failure_count += 1
+            print(f"makeChunks failed with input {test_list}, {chunk_size}: {e}")
 
-def fuzzValues(val1, val2, operation):
-    if operation == 'add':
-        return add(val1, val2)
-    elif operation == 'subtract':
-        return subtract(val1, val2)
-    elif operation == 'multiply':
-        return multiply(val1, val2)
-    elif operation == 'divide':
-        return divide(val1, val2)
-    elif operation == 'power':
-        return power(val1, val2)
-    else:
-        return "Invalid operation"
+    for _ in range(100):
+        try:
+            test_str = random.choice(
+                [
+                    "",
+                    "".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=1000)),
+                    "".join(random.choices("!@#$%^&*()", k=random.randint(1, 100))),
+                    "Test\nNew Line\n1234",
+                ]
+            )
+            test_file = f"test_file_{random.randint(0, 1000)}.txt"
+            dumpContentIntoFile(test_str, test_file)
+            os.remove(test_file)
+        except Exception as e:
+            failure_count += 1
+            print(f"dumpContentIntoFile failed with input {test_str}, {test_file}: {e}")
 
-def simpleFuzzer():
-    # Test cases for addition
-    print("Testing Addition:")
-    print(fuzzValues('10', '5', 'add'))
-    print(fuzzValues('abc', '5', 'add'))
-    print(fuzzValues('0', '0', 'add'))
+    for _ in range(100):
+        try:
+            test_dir = random.choice(
+                [f"nonexistent_dir_{random.randint(0, 1000)}", ".", "/dev/null"]
+            )
+            getAllPythonFilesinRepo(test_dir)
+        except Exception as e:
+            failure_count += 1
+            print(f"getAllPythonFilesinRepo failed with input {test_dir}: {e}")
 
-    # Test cases for subtraction
-    print("\nTesting Subtraction:")
-    print(fuzzValues('10', '5', 'subtract'))
-    print(fuzzValues('5', '10', 'subtract'))
-    print(fuzzValues('abc', '5', 'subtract'))
+    for _ in range(100):
+        try:
+            test_list = random.choice(
+                [
+                    [random.uniform(-1000, 1000) for _ in range(random.randint(1, 50))],
+                    [0] * random.randint(1, 50),
+                    [sys.float_info.max, -sys.float_info.max],
+                    [random.uniform(1, 10)],
+                ]
+            )
+            Average(test_list)
+        except Exception as e:
+            failure_count += 1
+            print(f"Average failed with input {test_list}: {e}")
 
-    # Test cases for multiplication
-    print("\nTesting Multiplication:")
-    print(fuzzValues('10', '5', 'multiply'))
-    print(fuzzValues('0', '5', 'multiply'))
-    print(fuzzValues('abc', '5', 'multiply'))
+    for _ in range(100):
+        try:
+            test_list = random.choice(
+                [
+                    [random.uniform(-1000, 1000) for _ in range(random.randint(1, 50))],
+                    [random.randint(1, 10)] * random.randint(1, 50),
+                    [0],
+                    [
+                        random.randint(1, 10),
+                        random.randint(1, 10),
+                        random.randint(1, 10),
+                    ],
+                ]
+            )
+            Median(test_list)
+        except Exception as e:
+            failure_count += 1
+            print(f"Median failed with input {test_list}: {e}")
 
-    # Test cases for division
-    print("\nTesting Division:")
-    print(fuzzValues('10', '5', 'divide'))
-    print(fuzzValues('10', '0', 'divide'))
-    print(fuzzValues('abc', '5', 'divide'))
+    if failure_count > 0:
+        print(f"Total failures: {failure_count}")
 
-    # Test cases for power
-    print("\nTesting Power:")
-    print(fuzzValues('2', '3', 'power'))
-    print(fuzzValues('2', '1000', 'power'))
-    print(fuzzValues('abc', '5', 'power'))
 
-def randomFuzzer(num_tests=10):
-    operations = ['add', 'subtract', 'multiply', 'divide', 'power']
-    
-    for _ in range(num_tests):
-        # Generate random numbers as strings
-        v1 = str(random.randint(-100, 100))
-        v2 = str(random.randint(-100, 100))
-        op = random.choice(operations)
-        
-        result = fuzzValues(v1, v2, op)
-        print(f"Operation: {op}, Values: {v1}, {v2}, Result: {result}")
-
-if __name__=='__main__':
-    print("Running Simple Fuzzer Tests:")
-    simpleFuzzer()
-    print("\nRunning Random Fuzzer Tests:")
-    randomFuzzer()
+if __name__ == "__main__":
+    fuzzer()
