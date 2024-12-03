@@ -12,13 +12,11 @@ import numpy as np
 import statistics
 
 
-# mining/git.repo.miner.py
 def makeChunks(the_list, size_):
     for i in range(0, len(the_list), size_):
         yield the_list[i : i + size_]
 
 
-# mining/mining.py
 def dumpContentIntoFile(strP, fileP):
     fileToWrite = open(fileP, "w")
     fileToWrite.write(strP)
@@ -26,7 +24,6 @@ def dumpContentIntoFile(strP, fileP):
     return str(os.stat(fileP).st_size)
 
 
-# FAME-ML/main.py
 def getAllPythonFilesinRepo(path2dir):
     valid_list = []
     for root_, dirnames, filenames in os.walk(path2dir):
@@ -41,18 +38,17 @@ def getAllPythonFilesinRepo(path2dir):
     return valid_list
 
 
-# empirical/report.py
 def Average(Mylist):
     return sum(Mylist) / len(Mylist)
 
 
-# empirical/report.py
 def Median(Mylist):
     return statistics.median(Mylist)
 
 
 def fuzzer():
     failure_count = 0
+    error_messages = []
 
     for _ in range(100):
         try:
@@ -63,7 +59,9 @@ def fuzzer():
             list(makeChunks(test_list, chunk_size))
         except Exception as e:
             failure_count += 1
-            print(f"makeChunks failed with input {test_list}, {chunk_size}: {e}")
+            error_msg = f"makeChunks failed with input {test_list}, {chunk_size}: {e}"
+            error_messages.append(error_msg)
+            print(error_msg)
 
     for _ in range(100):
         try:
@@ -80,7 +78,9 @@ def fuzzer():
             os.remove(test_file)
         except Exception as e:
             failure_count += 1
-            print(f"dumpContentIntoFile failed with input {test_str}, {test_file}: {e}")
+            error_msg = f"dumpContentIntoFile failed with input {test_str}, {test_file}: {e}"
+            error_messages.append(error_msg)
+            print(error_msg)
 
     for _ in range(100):
         try:
@@ -90,7 +90,9 @@ def fuzzer():
             getAllPythonFilesinRepo(test_dir)
         except Exception as e:
             failure_count += 1
-            print(f"getAllPythonFilesinRepo failed with input {test_dir}: {e}")
+            error_msg = f"getAllPythonFilesinRepo failed with input {test_dir}: {e}"
+            error_messages.append(error_msg)
+            print(error_msg)
 
     for _ in range(100):
         try:
@@ -105,7 +107,9 @@ def fuzzer():
             Average(test_list)
         except Exception as e:
             failure_count += 1
-            print(f"Average failed with input {test_list}: {e}")
+            error_msg = f"Average failed with input {test_list}: {e}"
+            error_messages.append(error_msg)
+            print(error_msg)
 
     for _ in range(100):
         try:
@@ -124,10 +128,14 @@ def fuzzer():
             Median(test_list)
         except Exception as e:
             failure_count += 1
-            print(f"Median failed with input {test_list}: {e}")
+            error_msg = f"Median failed with input {test_list}: {e}"
+            error_messages.append(error_msg)
+            print(error_msg)
 
     if failure_count > 0:
         print(f"Total failures: {failure_count}")
+        with open("fuzz.log", "w") as log_file:
+            log_file.write("\n".join(error_messages))
 
 
 if __name__ == "__main__":
