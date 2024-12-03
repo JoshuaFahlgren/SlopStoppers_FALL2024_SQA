@@ -1,3 +1,10 @@
+"""
+Team Name: Slop Stoppers
+Team Members:
+- Joshua Fahlgren
+- Mathew Rogers
+"""
+
 import random
 import math
 import sys
@@ -78,7 +85,9 @@ def fuzzer():
             os.remove(test_file)
         except Exception as e:
             failure_count += 1
-            error_msg = f"dumpContentIntoFile failed with input {test_str}, {test_file}: {e}"
+            error_msg = (
+                f"dumpContentIntoFile failed with input {test_str}, {test_file}: {e}"
+            )
             error_messages.append(error_msg)
             print(error_msg)
 
