@@ -40,3 +40,10 @@ python -m bandit "C:\Users\jfahl\Documents\AuburnClasses\Fall2024SQA\SlopStopper
 
 The output of this bandit check is in our repo. The bandit check is executed when we attempt to commit a new change to part of the folder.
 
+Bandit is useful when paired with a githook because it automatically checks commits for security vulernabilities. 
+
+### Continuous integration with Codacy Analysis CLI
+
+Codacy is an automated code review tool that helps coders avoid security issues, duplicationm, and general technical debt. 
+
+We enabled codacy with github actions. Codacy was implemented in the .github/workflows/codacy.yml file.
