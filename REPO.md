@@ -32,3 +32,11 @@ Forensics logging occurs at the following locations in the MLForensics repo:
 These methods were chosen because they invoke with a significant amont of system calls, which are points of interest for malicious actors.
 
 In order for many of the python files to be executed and to demonstrate the logging process, our team would need several files not provided. So, logging execution isn't provided here but the logging statements are simple enough to be sound.
+
+### Git Hooks and Bandit
+
+The githook was created in the pre-commit file and applied to the MLForensics folder. The code line that was added was:
+python -m bandit "C:\Users\jfahl\Documents\AuburnClasses\Fall2024SQA\SlopStoppers_FALL2024_SQA\MLForensics"
+
+The output of this bandit check is in our repo. The bandit check is executed when we attempt to commit a new change to part of the folder.
+
